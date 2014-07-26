@@ -21,11 +21,16 @@ public class DsvAggregator {
     DsvAggregator(String filename) throws IOException {
         BufferedReader br = null;
         InputStreamReader isr = null;
+        int loaded = 0;
         try {
             isr = new FileReader(new File(filename));
             br = new BufferedReader(isr);
             while (br.ready()) {
                 data.add(Arrays.asList(br.readLine().split(DELIM)));
+                loaded++;
+                if (loaded % 1000 == 0) {
+                    System.out.println(loaded);
+                }
             }
         } finally {
             if (isr != null)
