@@ -1,25 +1,22 @@
 package com.palantir.BadAgg;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.FileReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.*;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.PriorityQueue;
-import java.util.TreeMap;
 
-public class DsvAggregator {
+public class Aggregator implements Runnable {
     static final String DELIM = ",";
     private List<List<String>> data = new ArrayList<List<String>>();
+    public CALLTYPE calltype;
+    public String prefix;
+    public int prefix_result;
+    public List<String> state_result;
+    public String state;
+    public String rangemax_result;
+    public int startAge;
+    public int endAge;
 
-
-    DsvAggregator(String filename) throws IOException {
+    Aggregator(String filename) throws IOException {
 
         BufferedReader br = null;
         InputStreamReader isr = null;
@@ -37,10 +34,12 @@ public class DsvAggregator {
             System.out.println("\nFinished loading " + filename);
 
         } finally {
-            if (isr != null)
+            if (isr != null) {
                 isr.close();
-            if (br != null)
+            }
+            if (br != null) {
                 br.close();
+            }
         }
     }
 
@@ -74,7 +73,7 @@ public class DsvAggregator {
     }
 
     public List<String> getTop10OldestByState(String state) {
-        TreeMap<Integer,String> tm = new TreeMap<Integer,String>();
+        TreeMap<Integer, String> tm = new TreeMap<Integer, String>();
         for (List<String> row : data) {
             if (state.equalsIgnoreCase(row.get(2))) {
                 tm.put(Integer.parseInt(row.get(1)), row.get(0));
@@ -85,13 +84,15 @@ public class DsvAggregator {
         List<String> names = new ArrayList<String>(10);
         for (String name : tm.values()) {
             names.add(name);
-            if (--i <= 0) break;
+            if (--i <= 0) {
+                break;
+            }
         }
         return names;
     }
 
     public String getRangeMax(int startAge, int endAge) {
-        Map<String,Integer> countsByState = new HashMap<String, Integer>();
+        Map<String, Integer> countsByState = new HashMap<String, Integer>();
         for (List<String> row : data) {
             int age = Integer.parseInt(row.get(1));
             String state = row.get(2);
@@ -107,7 +108,7 @@ public class DsvAggregator {
 
         String maxState = "";
         int maxCount = 0;
-        for (Entry<String,Integer> ent : countsByState.entrySet()) {
+        for (Entry<String, Integer> ent : countsByState.entrySet()) {
             if (ent.getValue() > maxCount) {
                 maxState = ent.getKey();
                 maxCount = ent.getValue();
@@ -115,5 +116,26 @@ public class DsvAggregator {
         }
 
         return maxState;
+    }
+
+    @Override
+    public void run() {
+        switch (calltype) {
+            case PREFIX:
+                prefix_result = getPrefixAverage(prefix);
+                break;
+            case STATE:
+                state_result = getTop10OldestByState(state);
+                break;
+            case RANGEMAX:
+                rangemax_result = getRangeMax(startAge, endAge);
+                break;
+            default:
+                throw new IllegalStateException();
+        }
+    }
+
+    static enum CALLTYPE {
+        PREFIX, STATE, RANGEMAX;
     }
 }

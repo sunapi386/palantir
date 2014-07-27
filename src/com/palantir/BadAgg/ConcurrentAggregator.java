@@ -2,7 +2,11 @@ package com.palantir.BadAgg;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Singleton - this file makes NUMCORES number of DsvAggregators,
@@ -14,7 +18,8 @@ import java.util.List;
 public class ConcurrentAggregator {
     private final static int NUMCORES = Runtime.getRuntime().availableProcessors();
     private static ArrayList<FileWriter> files;
-    List<DsvAggregator> aggregators;
+    private static List<Aggregator> aggregators;
+    private static ExecutorService pool;
 
     public ConcurrentAggregator(String filename) throws IOException {
 
@@ -36,26 +41,64 @@ public class ConcurrentAggregator {
         }
 
         // make multiple instances of DsvAggregator
-        aggregators = new ArrayList<DsvAggregator>();
+        aggregators = new ArrayList<Aggregator>();
         for (int i = 0; i < NUMCORES; i++) {
             String filepath = files.get(i).toString();
             System.out.println("Creating aggregator #" + i + " for file " + filepath);
-            aggregators.add(new DsvAggregator(filepath));
+            aggregators.add(new Aggregator(filepath));
         }
 
+        // initialize executors
+        pool = Executors.newFixedThreadPool(NUMCORES);
     }
 
 
-    public int getPrefixAverage(String prefix) {
-        //TODO: aggregate and summarize
+    public int getPrefixAverage(String prefix) throws InterruptedException {
+        for (Aggregator aggregator : aggregators) {
+            aggregator.calltype = Aggregator.CALLTYPE.PREFIX;
+            aggregator.prefix = prefix;
+            pool.submit(aggregator);
+        }
+        pool.awaitTermination(60, TimeUnit.SECONDS);
+        List<Integer> results = new LinkedList<Integer>();
+        for (Aggregator aggregator : aggregators) {
+            results.add(aggregator.prefix_result);
+        }
+        // TODO: collect them together and return results
         return 0;
     }
 
-    public List<String> getTop10OldestByState(String state) {
+    public List<String> getTop10OldestByState(String state) throws InterruptedException {
+        for (Aggregator aggregator : aggregators) {
+            aggregator.calltype = Aggregator.CALLTYPE.STATE;
+            aggregator.state = state;
+            pool.submit(aggregator);
+        }
+        pool.awaitTermination(60, TimeUnit.SECONDS);
+        List<List<String>> results = new ArrayList<List<String>>();
+        for (Aggregator aggregator : aggregators) {
+            results.add(aggregator.state_result);
+        }
+        // TODO: collect them together and return results
+
+
         return null;
     }
 
-    public String getRangeMax(int startAge, int endAge) {
+    public String getRangeMax(int startAge, int endAge) throws InterruptedException {
+        for (Aggregator aggregator : aggregators) {
+            aggregator.calltype = Aggregator.CALLTYPE.RANGEMAX;
+            aggregator.startAge = startAge;
+            aggregator.endAge = endAge;
+            pool.submit(aggregator);
+        }
+        pool.awaitTermination(60, TimeUnit.SECONDS);
+        List<String> results = new ArrayList<String>();
+        for (Aggregator aggregator : aggregators) {
+            results.add(aggregator.rangemax_result);
+        }
+        // TODO: collect them together and return results
+
         return null;
     }
 }
