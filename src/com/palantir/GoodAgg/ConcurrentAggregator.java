@@ -3,9 +3,7 @@ package com.palantir.GoodAgg;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * Singleton - this file makes NUMCORES number of DsvAggregators,
@@ -16,18 +14,21 @@ import java.util.concurrent.TimeUnit;
  */
 public class ConcurrentAggregator {
     private final static int NUMCORES = Runtime.getRuntime().availableProcessors();
-    private static ArrayList<FileWriter> files;
+    private static ArrayList<FileWriter> fileWriters;
     private static List<Aggregator> aggregators;
     private static ExecutorService pool;
+    private final List<String> filenames;
 
     public ConcurrentAggregator(String filename) throws IOException {
 
         // break the large file into smaller pieces
-        files = new ArrayList<FileWriter>();
+        fileWriters = new ArrayList<FileWriter>();
+        filenames = new ArrayList<String>();
         System.out.println("Using " + NUMCORES + "cores");
         for (int i = 0; i < NUMCORES; i++) {
             File temp = File.createTempFile("temp-file-" + i, ".tmp");
-            files.add(new FileWriter(temp.getAbsolutePath()));
+            filenames.add(temp.getAbsolutePath());
+            fileWriters.add(new FileWriter(temp.getAbsolutePath()));
             System.out.println("created temp file " + temp.getAbsolutePath());
         }
         int lineNum = 0;
@@ -35,14 +36,14 @@ public class ConcurrentAggregator {
         BufferedReader br = new BufferedReader(isr);
         while (br.ready()) {
             int filenum = (lineNum % NUMCORES);
-            files.get(filenum).write(br.readLine());
+            fileWriters.get(filenum).write(br.readLine());
             lineNum++;
         }
 
         // make multiple instances of DsvAggregator
         aggregators = new ArrayList<Aggregator>();
         for (int i = 0; i < NUMCORES; i++) {
-            String filepath = files.get(i).toString();
+            String filepath = filenames.get(i).toString();
             System.out.println("Creating aggregator #" + i + " for file " + filepath);
             aggregators.add(new Aggregator(filepath));
         }
@@ -52,17 +53,24 @@ public class ConcurrentAggregator {
     }
 
 
-    public int getPrefixAverage(String prefix) throws InterruptedException {
+    public int getPrefixAverage(String prefix) throws InterruptedException, ExecutionException {
+        List<Future<?>> futures = new ArrayList<Future<?>>();
         for (Aggregator aggregator : aggregators) {
             aggregator.calltype = Aggregator.CALLTYPE.PREFIX;
             aggregator.prefix = prefix;
-            pool.submit(aggregator);
+            futures.add(pool.submit(aggregator));
         }
-        pool.awaitTermination(60, TimeUnit.SECONDS);
+
         int results = 0;
-        for (Aggregator aggregator : aggregators) {
-            results += (aggregator.prefix_result);
+        System.out.println("getPrefixAverage");
+        for (Future<?> futureAgg : futures) {
+            while (!futureAgg.isDone());
+            System.out.print(".");
+            results += ((Aggregator) futureAgg.get()).prefix_result;
         }
+        System.out.print("\n");
+        pool.shutdown();
+        pool.awaitTermination(12, TimeUnit.SECONDS);
         return results;
     }
 
@@ -72,13 +80,14 @@ public class ConcurrentAggregator {
             aggregator.state = state;
             pool.submit(aggregator);
         }
-        pool.awaitTermination(60, TimeUnit.SECONDS);
+        pool.awaitTermination(12, TimeUnit.SECONDS);
         List<List<String>> results = new ArrayList<List<String>>();
         for (Aggregator aggregator : aggregators) {
             results.add(aggregator.state_result);
         }
         // TODO: collect them together and return results
-
+        for (List<String> localtop : results) {
+        }
 
         return null;
     }
@@ -90,7 +99,7 @@ public class ConcurrentAggregator {
             aggregator.endAge = endAge;
             pool.submit(aggregator);
         }
-        pool.awaitTermination(60, TimeUnit.SECONDS);
+        pool.awaitTermination(12, TimeUnit.SECONDS);
         List<String> results = new ArrayList<String>();
         for (Aggregator aggregator : aggregators) {
             results.add(aggregator.rangemax_result);

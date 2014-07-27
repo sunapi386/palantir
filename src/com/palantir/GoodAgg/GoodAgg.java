@@ -3,10 +3,11 @@ package com.palantir.GoodAgg;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.concurrent.ExecutionException;
 
 public class GoodAgg {
 
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
         int mb = 1024 * 1024;
         System.out.println("GoodAgg. Total memory: " + Runtime.getRuntime().totalMemory() / mb + "MB");
 //        	Scanner sc = new Scanner(System.in);
