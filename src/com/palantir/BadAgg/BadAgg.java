@@ -12,12 +12,12 @@ public class BadAgg {
 //        	Scanner sc = new Scanner(System.in);
         System.out.println("Loading...");
         DsvAggregator agg = new DsvAggregator("rand.data"/*sc.nextLine()*/);
-        System.out.println("Read whole csv");
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        System.out.println("average <prefix of name>");
-        System.out.println("top10 <state>");
-        System.out.println("average <start age> <end age>");
+        System.out.println("average <prefix of name>            => find all names that have that prefix and find the average of those");
+        System.out.println("top10 <state>                       => find top 10 oldest names by age");
+        System.out.println("rangemax <start age> <end age>      => finds a state that has the most number of people between the start and end age");
         while (true) {
+            System.out.print(">>> ");
             String[] command = br.readLine().split(" ");
             if (command[0].equalsIgnoreCase("average")) {
                 System.out.println(agg.getPrefixAverage(command[1]));
@@ -26,7 +26,7 @@ public class BadAgg {
             } else if (command[0].equalsIgnoreCase("rangemax")) {
                 System.out.println(agg.getRangeMax(Integer.parseInt(command[1]), Integer.parseInt(command[2])));
             } else {
-                return;
+                System.out.println("Unknown command, try again");
             }
         }
     }

@@ -29,9 +29,11 @@ public class DsvAggregator {
                 data.add(Arrays.asList(br.readLine().split(DELIM)));
                 loaded++;
                 if (loaded % 1000 == 0) {
-                    System.out.println(loaded);
+                    System.out.print("\r" + loaded / 1000 + "K entries");
                 }
             }
+            System.out.println("\nFinished loading " + filename);
+
         } finally {
             if (isr != null)
                 isr.close();
@@ -66,7 +68,7 @@ public class DsvAggregator {
                 sum += age;
             }
         }
-        return sum / count;
+        return count > 0 ? sum / count : 0;
     }
 
     public List<String> getTop10OldestByState(String state) {

@@ -40,4 +40,4 @@ if __name__ == '__main__':
 	#print (','.join([ 'id' ] + sorted(columns)))
 	print (','.join(columns))
 	model = zip(columns, [ distribution[column] for column in columns ])
-	for _ in xrange(10): print new_row(*model)
+	for _ in xrange(1000000): print new_row(*model)
