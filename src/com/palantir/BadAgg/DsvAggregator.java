@@ -18,7 +18,9 @@ public class DsvAggregator {
     static final String DELIM = ",";
     private List<List<String>> data = new ArrayList<List<String>>();
 
+
     DsvAggregator(String filename) throws IOException {
+
         BufferedReader br = null;
         InputStreamReader isr = null;
         int loaded = 0;
