@@ -4,7 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-public class BadAgg {
+public class GoodAgg {
 
     public static void main(String[] args) throws IOException, InterruptedException {
         int mb = 1024 * 1024;
