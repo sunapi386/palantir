@@ -1,4 +1,4 @@
-package com.palantir.BadAgg;
+package com.palantir.GoodAgg;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -6,9 +6,9 @@ import java.io.InputStreamReader;
 
 public class BadAgg {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, InterruptedException {
         int mb = 1024 * 1024;
-        System.out.println("BadAgg. Total memory: " + Runtime.getRuntime().totalMemory() / mb + "MB");
+        System.out.println("GoodAgg. Total memory: " + Runtime.getRuntime().totalMemory() / mb + "MB");
 //        	Scanner sc = new Scanner(System.in);
 
         System.out.println("Loading...");

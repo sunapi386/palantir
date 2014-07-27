@@ -1,8 +1,7 @@
-package com.palantir.BadAgg;
+package com.palantir.GoodAgg;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -60,12 +59,11 @@ public class ConcurrentAggregator {
             pool.submit(aggregator);
         }
         pool.awaitTermination(60, TimeUnit.SECONDS);
-        List<Integer> results = new LinkedList<Integer>();
+        int results = 0;
         for (Aggregator aggregator : aggregators) {
-            results.add(aggregator.prefix_result);
+            results += (aggregator.prefix_result);
         }
-        // TODO: collect them together and return results
-        return 0;
+        return results;
     }
 
     public List<String> getTop10OldestByState(String state) throws InterruptedException {

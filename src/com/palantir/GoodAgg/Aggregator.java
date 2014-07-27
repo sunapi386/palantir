@@ -1,4 +1,4 @@
-package com.palantir.BadAgg;
+package com.palantir.GoodAgg;
 
 import java.io.*;
 import java.util.*;
