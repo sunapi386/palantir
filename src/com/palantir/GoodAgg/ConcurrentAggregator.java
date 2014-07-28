@@ -36,7 +36,7 @@ public class ConcurrentAggregator {
         BufferedReader br = new BufferedReader(isr);
         while (br.ready()) {
             int filenum = (lineNum % NUMCORES);
-            fileWriters.get(filenum).write(br.readLine());
+            fileWriters.get(filenum).write(br.readLine() + "\n");
             lineNum++;
         }
 
@@ -62,7 +62,6 @@ public class ConcurrentAggregator {
         }
 
         int results = 0;
-        System.out.println("getPrefixAverage");
         for (Future<?> futureAgg : futures) {
             while (!futureAgg.isDone());
             System.out.print(".");
